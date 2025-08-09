@@ -1,0 +1,3 @@
+<Atlas><Texture filename="book_fossil.tex" />
+    <Elements><Element name="book_fossil.tex" u1="0.05" u2="0.95" v1="0.1" v2="0.9" />
+</Elements></Atlas>
