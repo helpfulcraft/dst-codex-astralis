@@ -60,8 +60,6 @@
 
 ## 开发计划
 
-详见 [imp.md](imp.md) 文件和 [content_improvement.md](content_improvement.md) 文件。
-
 ### 当前进度
 - [x] 阶段1：静态攻略书（已完成）
 - [x] 阶段2：团队计划器（已完成）
