@@ -1,7 +1,7 @@
 # 万象全书 (Atlas Book) - 饥荒联机版模组
 
 ![万象全书 Banner](https://helpfulcraft-blog.oss-cn-beijing.aliyuncs.com/20250824164415.png)
-![Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3555025039)
+https://steamcommunity.com/sharedfiles/filedetails/?id=3555025039
 
 **万象全书** 是一个为《饥荒联机版》(Don't Starve Together) 设计的功能增强型模组。它为玩家提供了一本包罗万象的魔法书籍，集成了详尽的游戏内攻略指南和强大的团队协作工具，旨在提升新手玩家的入门体验，并为资深团队提供高效的规划平台。
 
