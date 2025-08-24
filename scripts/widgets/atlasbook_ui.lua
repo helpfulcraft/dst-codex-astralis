@@ -5,56 +5,81 @@ local Image = require("widgets/image")
 local TEMPLATES = require "widgets/redux/templates"
 local ScrollableList = require "widgets/scrollablelist"
 
+-- 加载外部攻略数据，如果失败则使用内置数据
+local function LoadGuideData()
+    print("[万象全书] 尝试加载外部攻略数据...")
+
+    -- 尝试加载外部数据文件
+    local success, external_data = pcall(function()
+        return require("data.guides.guide_data")
+    end)
+
+    if success and external_data then
+        print("[万象全书] 成功加载外部攻略数据")
+        return external_data
+    else
+        print("[万象全书] 外部数据加载失败，使用内置数据")
+        return nil
+    end
+end
+
 -- 定义攻略内容数据，使用层级结构
-local GUIDE_DATA = {
-    -- 第一大节：新手指南
-    beginner = {
-        title = "新手指南",
-        is_section = true,
-        children = {
-            beginner_day1to3 = {
-                title = "开局前三天",
-                text = "第一天：收集树枝、草、燧石，制作基本工具。\n第二天：建立营地，制作科学机器。\n第三天：准备食物和火把，迎接第一个夜晚。",
-            },
-            beginner_base = {
-                title = "基地建设",
-                text = "选择基地位置时要考虑资源、生物群落和季节因素。\n基础设施：营火、科学机器、烹饪锅、冰箱、晾肉架。\n围墙与陷阱可以提供安全保障。",
-            },
-        },
-    },
-    
-    -- 第二大节：生存技巧
-    survival = {
-        title = "生存技巧",
-        is_section = true,
-        children = {
-            survival_seasons = {
-                title = "四季生存指南",
-                text = "春季：雨水较多，注意防潮。\n夏季：高温引发自燃，准备降温装备。\n秋季：收获的季节，多收集资源。\n冬季：低温致命，准备保暖装备和充足食物。",
-            },
-            survival_food = {
-                title = "食物与烹饪",
-                text = "烹饪锅可以制作更有营养的食物。\n肉类食物：怪物肉、兔肉、鸟肉等。\n蔬菜：胡萝卜、浆果、蘑菇等。\n最佳食谱：肉丸、火鸡大餐、培根煎蛋。",
+-- 首先尝试加载外部数据，失败时使用内置数据
+local GUIDE_DATA = LoadGuideData()
+
+-- 如果外部数据加载失败，使用内置数据
+if not GUIDE_DATA then
+    print("[万象全书] 使用内置数据")
+    GUIDE_DATA = {
+        -- 第一大节：新手指南
+        beginner = {
+            title = "新手指南",
+            is_section = true,
+            children = {
+                beginner_day1to3 = {
+                    title = "开局前三天",
+                    text = "第一天：收集树枝、草、燧石，制作基本工具。\n第二天：建立营地，制作科学机器。\n第三天：准备食物和火把，迎接第一个夜晚。",
+                },
+                beginner_base = {
+                    title = "基地建设",
+                    text = "选择基地位置时要考虑资源、生物群落和季节因素。\n基础设施：营火、科学机器、烹饪锅、冰箱、晾肉架。\n围墙与陷阱可以提供安全保障。",
+                },
             },
         },
-    },
-    
-    -- 第三大节：战斗指南
-    combat = {
-        title = "战斗指南",
-        is_section = true,
-        children = {
-            combat_basics = {
-                title = "战斗技巧",
-                text = "学会走位和攻击节奏。\n制作武器：长矛、暗夜剑、触手棒等。\n制作护甲：草甲、木甲、大理石甲等。\n学会风筝怪物，避免被围攻。",
-            },
-            combat_bosses = {
-                title = "常见BOSS攻略",
-                text = "树精守卫：用火攻击最有效。\n克劳斯：冬季出现，掉落红宝石。\n蜂后：引出巢穴后集中攻击。\n远古守护者：地下世界的最终BOSS。",
+
+        -- 第二大节：生存技巧
+        survival = {
+            title = "生存技巧",
+            is_section = true,
+            children = {
+                survival_seasons = {
+                    title = "四季生存指南",
+                    text = "春季：雨水较多，注意防潮。\n夏季：高温引发自燃，准备降温装备。\n秋季：收获的季节，多收集资源。\n冬季：低温致命，准备保暖装备和充足食物。",
+                },
+                survival_food = {
+                    title = "食物与烹饪",
+                    text = "烹饪锅可以制作更有营养的食物。\n肉类食物：怪物肉、兔肉、鸟肉等。\n蔬菜：胡萝卜、浆果、蘑菇等。\n最佳食谱：肉丸、火鸡大餐、培根煎蛋。",
+                },
             },
         },
-    },
-}
+
+        -- 第三大节：战斗指南
+        combat = {
+            title = "战斗指南",
+            is_section = true,
+            children = {
+                combat_basics = {
+                    title = "战斗技巧",
+                    text = "学会走位和攻击节奏。\n制作武器：长矛、暗夜剑、触手棒等。\n制作护甲：草甲、木甲、大理石甲等。\n学会风筝怪物，避免被围攻。",
+                },
+                combat_bosses = {
+                    title = "常见BOSS攻略",
+                    text = "树精守卫：用火攻击最有效。\n克劳斯：冬季出现，掉落红宝石。\n蜂后：引出巢穴后集中攻击。\n远古守护者：地下世界的最终BOSS。",
+                },
+            },
+        },
+    }
+end
 
 -- 扁平化章节列表，用于翻页
 local FLAT_CHAPTERS = {}
@@ -89,7 +114,7 @@ local AtlasBookUI = Class(Screen, function(self, owner)
     self.panel:SetBackgroundTint(unpack(UICOLOURS.BROWN_DARK))
     
     -- 手动添加关闭按钮
-    self.close_button = self.panel:AddChild(TEMPLATES.StandardButton(function() self:Close() end, "Close", {100, 50}))
+    self.close_button = self.panel:AddChild(TEMPLATES.StandardButton(function() self:Close() end, "关闭", {100, 50}))
     self.close_button:SetPosition(900/2 - 50, 600/2 - 25, 0)
 
     -- 标签页
@@ -144,95 +169,26 @@ local AtlasBookUI = Class(Screen, function(self, owner)
     -- 团队计划视图
     self.planner_view:KillAllChildren()
 
-    -- 添加任务输入区域
-    self.task_input_area = self.planner_view:AddChild(Widget("TASK_INPUT_AREA"))
-    self.task_input_area:SetPosition(0, -250, 0)
-    
-    -- 添加文本提示
-    local input_label = self.task_input_area:AddChild(Text(DEFAULTFONT, 24))
-    input_label:SetPosition(-200, 0, 0)
-    input_label:SetString("输入任务:")
-    input_label:SetColour(0, 0, 0, 1)
-    
-    -- 添加任务输入框（使用简单的文本显示模拟输入框）
-    self.task_input_text = ""
-    self.task_input_display = self.task_input_area:AddChild(Text(DEFAULTFONT, 24))
-    self.task_input_display:SetPosition(0, 0, 0)
-    self.task_input_display:SetRegionSize(300, 40)
-    self.task_input_display:SetHAlign(ANCHOR_LEFT)
-    self.task_input_display:SetVAlign(ANCHOR_MIDDLE)
-    self.task_input_display:SetString(self.task_input_text)
-    self.task_input_display:SetColour(1, 0.95, 0.8, 1) -- 使用浅黄色
-    
-    -- 输入框背景
-    local input_bg = self.task_input_area:AddChild(Image("images/ui.xml", "blank.tex"))
-    input_bg:SetSize(300, 40)
-    input_bg:SetPosition(0, 0, 0)
-    input_bg:SetTint(0.2, 0.2, 0.2, 0.8) -- 深色背景
-    input_bg:MoveToBack()
-    
+    -- 初始化临时路牌输入系统
+    self.temp_sign = nil
+
+    -- 创建临时路牌用于输入
+    self:CreateTempSignForInput()
+
     -- 添加"添加任务"按钮
-    self.add_task_button = self.task_input_area:AddChild(TEMPLATES.StandardButton(
-        function() 
-            if self.task_input_text ~= "" then
-                print("[万象全书] 尝试添加任务: " .. tostring(self.task_input_text))
-                if TheWorld and TheWorld.components and TheWorld.components.atlas_todolist then
-                    TheWorld.components.atlas_todolist:AddTask(self.task_input_text)
-                    self.task_input_text = ""
-                    self.task_input_display:SetString("")
-                    self:UpdateTaskList() -- 添加任务后刷新列表
-                else
-                    print("[万象全书] 错误: TheWorld.components.atlas_todolist 不存在")
-                end
+    self.add_task_button = self.planner_view:AddChild(TEMPLATES.StandardButton(
+        function()
+            print("[万象全书] 激活路牌输入界面")
+            if self.temp_sign and self.temp_sign.components.writeable then
+                -- 激活路牌的输入界面
+                self.temp_sign.components.writeable:BeginWriting(self.owner)
+            else
+                print("[万象全书] 错误: 临时路牌不存在或没有writeable组件")
             end
         end,
-        "添加任务", {120, 40}
+        "添加任务", {120, 50}
     ))
-    self.add_task_button:SetPosition(200, 0, 0)
-    
-    -- 添加键盘输入处理
-    self.OnRawKey = function(_, key, down)
-        if self.current_view == "planner" and down then
-            if key >= KEY_A and key <= KEY_Z then
-                -- 字母键
-                local char = string.char(key - KEY_A + string.byte('a'))
-                self.task_input_text = self.task_input_text .. char
-                self.task_input_display:SetString(self.task_input_text)
-                return true
-            elseif key >= KEY_0 and key <= KEY_9 then
-                -- 数字键
-                local char = string.char(key - KEY_0 + string.byte('0'))
-                self.task_input_text = self.task_input_text .. char
-                self.task_input_display:SetString(self.task_input_text)
-                return true
-            elseif key == KEY_SPACE then
-                -- 空格键
-                self.task_input_text = self.task_input_text .. " "
-                self.task_input_display:SetString(self.task_input_text)
-                return true
-            elseif key == KEY_BACKSPACE and #self.task_input_text > 0 then
-                -- 退格键
-                self.task_input_text = string.sub(self.task_input_text, 1, #self.task_input_text - 1)
-                self.task_input_display:SetString(self.task_input_text)
-                return true
-            elseif key == KEY_ENTER or key == KEY_KP_ENTER then
-                -- 回车键，提交任务
-                if self.task_input_text ~= "" then
-                    print("[万象全书] 尝试添加任务: " .. tostring(self.task_input_text))
-                    if TheWorld and TheWorld.components and TheWorld.components.atlas_todolist then
-                        TheWorld.components.atlas_todolist:AddTask(self.task_input_text)
-                        self.task_input_text = ""
-                        self.task_input_display:SetString("")
-                        self:UpdateTaskList() -- 添加任务后刷新列表
-                    else
-                        print("[万象全书] 错误: TheWorld.components.atlas_todolist 不存在")
-                    end
-                end
-                return true
-            end
-        end
-        return false
-    end
+    self.add_task_button:SetPosition(0, -250, 0)
 
     -- 使用简单的垂直列表替代 ScrollingGrid
     self.tasks_panel = self.planner_view:AddChild(Widget("TASKS_PANEL"))
@@ -294,6 +250,27 @@ local AtlasBookUI = Class(Screen, function(self, owner)
     -- 设置初始视图
     self:SetView("guide")
     self:UpdateTaskList()
+
+    -- 全局事件监听器 - 在UI初始化时就设置，确保随时能接收更新
+    if not self.task_update_listener then
+        self.task_update_listener = TheWorld:ListenForEvent("atlas_todolist_updated", function()
+            print("[万象全书] 收到任务列表更新事件，立即刷新UI")
+            -- 立即刷新，无延迟
+            self:ForceUpdateTaskList()
+        end)
+        print("[万象全书] 已设置全局任务更新监听器")
+    end
+
+    if not self.sign_input_listener then
+        self.sign_input_listener = TheWorld:ListenForEvent("atlas_sign_input_complete", function()
+            print("[万象全书] 收到路牌输入完成事件，立即处理")
+            self.inst:DoTaskInTime(0.05, function()
+                print("[万象全书] 处理路牌输入后的UI刷新")
+                self:ForceUpdateTaskList()
+            end)
+        end)
+        print("[万象全书] 已设置路牌输入监听器")
+    end
 end)
 
 function AtlasBookUI:SetView(view_name)
@@ -314,6 +291,8 @@ function AtlasBookUI:SetView(view_name)
 end
 
 function AtlasBookUI:UpdateTaskList()
+    print("[万象全书] 开始更新任务列表UI")
+
     -- 清除现有任务项
     if self.task_items then
         for _, item in pairs(self.task_items) do
@@ -322,15 +301,15 @@ function AtlasBookUI:UpdateTaskList()
             end
         end
     end
-    
+
     self.task_items = {}
-    
+
     -- 如果没有任务列表容器，直接返回
     if not self.task_list then
         print("[万象全书] 错误: 任务列表容器不存在")
         return
     end
-    
+
     -- 获取世界组件中的任务列表
     local tasks = {}
     local success = pcall(function()
@@ -342,23 +321,25 @@ function AtlasBookUI:UpdateTaskList()
             print("[万象全书] 警告: TheWorld.components.atlas_todolist 不存在")
         end
     end)
-    
+
     if not success then
         print("[万象全书] 错误: 获取任务列表时发生异常")
         return
     end
-    
+
+    print("[万象全书] 准备创建 " .. tostring(#tasks) .. " 个任务项")
+
     -- 创建新的任务项
     local y_offset = 200 -- 从上往下排列
-    
+
     for i, task_data in ipairs(tasks) do
         print("[万象全书] 处理任务 " .. tostring(i) .. ": ID=" .. tostring(task_data.id) .. ", 文本=" .. tostring(task_data.text))
-        
+
         local task_item = nil
         success = pcall(function()
             task_item = self:CreateTaskItem(task_data)
         end)
-        
+
         if success and task_item then
             task_item:SetPosition(0, y_offset, 0)
             self.task_list:AddChild(task_item)
@@ -369,11 +350,85 @@ function AtlasBookUI:UpdateTaskList()
             print("[万象全书] 错误: 创建任务项失败 " .. tostring(task_data and task_data.id or "未知ID"))
         end
     end
+
+    print("[万象全书] 任务列表UI更新完成，共显示 " .. tostring(#self.task_items) .. " 个任务项")
+
+    -- 确保规划器视图是可见的
+    if self.planner_view then
+        print("[万象全书] 确保规划器视图可见")
+        if not self.planner_view:IsVisible() then
+            print("[万象全书] 规划器视图不可见，尝试显示")
+            self.planner_view:Show()
+            self.guide_view:Hide()
+        end
+
+        -- 重新设置视图状态
+        self.current_view = "planner"
+        self.planner_tab_button:SetTextColour(0.8, 0, 0, 1) -- Red
+        self.guide_tab_button:SetTextColour(0, 0, 0, 1) -- Black
+        print("[万象全书] 视图状态已重置为规划器")
+    end
+end
+
+function AtlasBookUI:CreateTempSignForInput()
+    print("[万象全书] 创建临时路牌用于输入")
+
+    -- 创建一个临时的路牌实体（不可见）
+    self.temp_sign = SpawnPrefab("homesign")
+    if self.temp_sign then
+        -- 设置路牌为不可见和不可交互
+        self.temp_sign.entity:SetCanSleep(false)
+        self.temp_sign:Hide()
+
+        -- 设置路牌位置在玩家附近但不可见
+        if self.owner then
+            local pos = self.owner:GetPosition()
+            self.temp_sign.Transform:SetPosition(pos.x, pos.y, pos.z)
+        end
+
+        -- 覆盖prefab名称以使用我们的自定义布局
+        self.temp_sign.prefab = "atlas_temp_sign"
+
+        -- 配置writeable组件的回调
+        if self.temp_sign.components.writeable then
+            self.temp_sign.components.writeable:SetOnWrittenFn(function(inst, text, doer)
+                print("[万象全书] 路牌输入完成，获取文本: " .. tostring(text))
+                self:OnSignInputComplete(text)
+            end)
+
+            self.temp_sign.components.writeable:SetOnWritingEndedFn(function(inst)
+                print("[万象全书] 路牌输入结束")
+            end)
+        else
+            print("[万象全书] 错误: 临时路牌没有writeable组件")
+        end
+
+        print("[万象全书] 临时路牌创建成功")
+    else
+        print("[万象全书] 错误: 无法创建临时路牌")
+    end
+end
+
+function AtlasBookUI:OnSignInputComplete(text)
+    print("[万象全书] 处理路牌输入结果: " .. tostring(text))
+
+    if text and text:gsub("%s+", "") ~= "" then
+        print("[万象全书] 添加任务到Todolist: " .. tostring(text))
+        if TheWorld and TheWorld.components and TheWorld.components.atlas_todolist then
+            TheWorld.components.atlas_todolist:AddTask(text)
+            print("[万象全书] 触发路牌输入完成事件")
+            TheWorld:PushEvent("atlas_sign_input_complete")
+        else
+            print("[万象全书] 错误: TheWorld.components.atlas_todolist 不存在")
+        end
+    else
+        print("[万象全书] 输入文本为空，忽略")
+    end
 end
 
 function AtlasBookUI:CreateTaskItem(task)
     print("[万象全书] 开始创建任务项: " .. tostring(task.id) .. ", " .. tostring(task.text))
-    
+
     if not task or not task.id or not task.text then
         print("[万象全书] 错误: 任务数据不完整 " .. tostring(task and task.id or "无ID"))
         return nil
@@ -645,13 +700,49 @@ end
 
 -- 关闭UI
 function AtlasBookUI:Close()
+    -- 清理临时路牌
+    self:CleanupTempSign()
+
     -- 确保在关闭UI时保存当前章节
     if self.owner and self.owner.atlas_book_data and self.current_chapter_id then
         print("[万象全书] 关闭UI时保存当前章节: " .. tostring(self.current_chapter_id))
         self.owner.atlas_book_data.last_page = self.current_chapter_id
     end
-    
+
+    -- 移除所有事件监听器，因为UI即将被销毁
+    if self.task_update_listener then
+        TheWorld:RemoveEventCallback("atlas_todolist_updated", self.task_update_listener)
+        self.task_update_listener = nil
+    end
+    if self.sign_input_listener then
+        TheWorld:RemoveEventCallback("atlas_sign_input_complete", self.sign_input_listener)
+        self.sign_input_listener = nil
+    end
+    if self.task_ready_listener then
+        TheWorld:RemoveEventCallback("atlas_todolist_ready", self.task_ready_listener)
+        self.task_ready_listener = nil
+    end
+
     TheFrontEnd:PopScreen(self)
+end
+
+function AtlasBookUI:CleanupTempSign()
+    print("[万象全书] 清理临时路牌")
+
+    if self.temp_sign then
+        -- 结束任何正在进行的输入
+        if self.temp_sign.components.writeable then
+            self.temp_sign.components.writeable:EndWriting()
+        end
+
+        -- 移除临时路牌
+        if self.temp_sign:IsValid() then
+            self.temp_sign:Remove()
+        end
+
+        self.temp_sign = nil
+        print("[万象全书] 临时路牌清理完成")
+    end
 end
 
 -- 处理输入
@@ -671,26 +762,36 @@ function AtlasBookUI:OnBecomeActive()
     AtlasBookUI._base.OnBecomeActive(self)
     -- 暂停游戏
     SetPause(true, "atlas_book")
-    
-    -- 监听任务列表更新事件
-    if not self.task_update_listener then
-        self.task_update_listener = TheWorld:ListenForEvent("atlas_todolist_updated", function() 
-            print("[万象全书] 收到任务列表更新事件")
-            self:UpdateTaskList() 
-        end)
-    end
-    
-    -- 监听任务列表组件准备就绪事件
+
+    -- 全局事件监听器已经在 _ctor 中设置，这里不需要重复设置
+    -- if not self.task_update_listener then
+    --     self.task_update_listener = TheWorld:ListenForEvent("atlas_todolist_updated", function()
+    --         ...
+    --     end)
+    -- end
+
+    -- if not self.sign_input_listener then
+    --     self.sign_input_listener = TheWorld:ListenForEvent("atlas_sign_input_complete", function()
+    --         ...
+    --     end)
+    -- end
+
+    -- 监听任务列表组件准备就绪事件 (这个可以保留，因为UI可能在组件准备好之前就激活了)
     if not self.task_ready_listener then
-        self.task_ready_listener = TheWorld:ListenForEvent("atlas_todolist_ready", function() 
+        self.task_ready_listener = TheWorld:ListenForEvent("atlas_todolist_ready", function()
             print("[万象全书] 收到任务列表组件准备就绪事件")
-            self:UpdateTaskList() 
+            self:UpdateTaskList()
         end)
     end
-    
+
     -- 检查组件是否存在
     if not TheWorld or not TheWorld.components or not TheWorld.components.atlas_todolist then
         print("[万象全书] 警告: TheWorld.components.atlas_todolist 不存在")
+    end
+
+    -- 确保每次激活时，如果当前是 planner 视图，任务列表也进行一次刷新
+    if self.current_view == "planner" then
+        self:UpdateTaskList()
     end
 end
 
@@ -699,13 +800,19 @@ function AtlasBookUI:OnBecomeInactive()
     AtlasBookUI._base.OnBecomeInactive(self)
     -- 恢复游戏
     SetPause(false, "atlas_book")
-    
-    -- 移除事件监听
-    if self.task_update_listener then
-        TheWorld:RemoveEventCallback("atlas_todolist_updated", self.task_update_listener)
-        self.task_update_listener = nil
+
+    -- 清理临时路牌（如果正在输入）
+    if self.temp_sign and self.temp_sign.components.writeable then
+        self.temp_sign.components.writeable:EndWriting()
     end
-    
+
+    -- 不再移除全局事件监听器，因为它们应该在UI的生命周期内保持活跃
+    -- 只有在UI完全关闭时（Close函数）才移除它们
+    -- if self.task_update_listener then
+    --     TheWorld:RemoveEventCallback("atlas_todolist_updated", self.task_update_listener)
+    --     self.task_update_listener = nil
+    -- end
+
     if self.task_ready_listener then
         TheWorld:RemoveEventCallback("atlas_todolist_ready", self.task_ready_listener)
         self.task_ready_listener = nil

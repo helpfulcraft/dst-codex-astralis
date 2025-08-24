@@ -267,9 +267,17 @@ STRINGS.RECIPE_DESC.BEEHIVE = "爱护蜜蜂 人人有责"
 STRINGS.RECIPE_DESC.SLURTLEHOLE = "内有两只蜗牛"
 STRINGS.RECIPE_DESC.CATCOONDEN = "浣猫喜欢居住其中"
 
-AddRecipe("book_petrify", {Ingredient("fossil_piece", GetModConfigData('fos')),Ingredient("papyrus", 2)}, GLOBAL.CUSTOM_RECIPETABS.BOOKS, 
-TECH.MAGIC_THREE, nil, nil, nil, nil, "bookbuilder","images/inventoryimages.xml", "book_fossil.tex", nil, nil)
-AddRecipe("book_gardening",  {Ingredient("papyrus", 2), Ingredient("seeds", 1), Ingredient("poop", 1)}, GLOBAL.CUSTOM_RECIPETABS.BOOKS, TECH.MOON_ALTAR_TWO, nil, nil, nil, nil, "bookbuilder")
+-- 延迟到游戏完全初始化后添加配方，确保 CUSTOM_RECIPETABS 可用
+AddSimPostInit(function()
+    if GLOBAL.CUSTOM_RECIPETABS and GLOBAL.CUSTOM_RECIPETABS.BOOKS then
+        AddRecipe("book_petrify", {Ingredient("fossil_piece", GetModConfigData('fos')),Ingredient("papyrus", 2)}, GLOBAL.CUSTOM_RECIPETABS.BOOKS,
+        TECH.MAGIC_THREE, nil, nil, nil, nil, "bookbuilder","images/inventoryimages.xml", "book_fossil.tex", nil, nil)
+        AddRecipe("book_gardening",  {Ingredient("papyrus", 2), Ingredient("seeds", 1), Ingredient("poop", 1)}, GLOBAL.CUSTOM_RECIPETABS.BOOKS, TECH.MOON_ALTAR_TWO, nil, nil, nil, nil, "bookbuilder")
+        print("[万象全书] 书籍配方添加成功")
+    else
+        print("[万象全书] 警告: CUSTOM_RECIPETABS.BOOKS 不可用，跳过书籍配方添加")
+    end
+end)
 local rsh = Recipe("spiderhole", {Ingredient("fossil_piece", 1), Ingredient("silk", 20), Ingredient("spidergland",30)}, RECIPETABS.TOWN, TECH.SCIENCE_TWO, "spiderhole_placer")
 rsh.atlas = "images/inventoryimages/spiderhole.xml"
 local rwh = Recipe("wasphive", { Ingredient("honeycomb", 1), Ingredient("stinger", 4), Ingredient("killerbee", 6)}, RECIPETABS.TOWN, TECH.SCIENCE_TWO, "wasphive_placer")
@@ -438,3 +446,63 @@ GLOBAL.ATLAS_RPC = {
     DELETE_TASK = ATLAS_RPC_DELETE_TASK,
     SYNC_TASKS = ATLAS_RPC_SYNC_TASKS
 }
+
+-- 配置临时路牌的输入界面布局 - 延迟到游戏完全初始化后执行
+AddSimPostInit(function()
+    -- 尝试直接加载 writeables 模块
+    local success, writeables = GLOBAL.pcall(GLOBAL.require, "writeables")
+
+    if success and writeables and writeables.AddLayout then
+        writeables.AddLayout("atlas_temp_sign", {
+            prompt = "输入任务内容:",
+            animbank = "ui_board_5x3",
+            animbuild = "ui_board_5x3",
+            menuoffset = GLOBAL.Vector3(6, -70, 0),
+            maxcharacters = 100, -- 限制任务最大长度
+
+            cancelbtn = { text = "取消", cb = nil, control = CONTROL_CANCEL },
+            middlebtn = { text = "清空", cb = function(inst, doer, widget)
+                widget:OverrideText("")
+            end, control = CONTROL_MENU_MISC_2 },
+            acceptbtn = {
+                text = "确定",
+                cb = function(inst, doer, widget)
+                    local text = widget:GetText()
+                    if text and text ~= "" then
+                        print("[万象全书] 输入的任务内容:", text)
+
+                        -- 直接操作 todolist 组件，避免 RPC 问题
+                        print("[万象全书] 直接添加任务到 todolist")
+                        if GLOBAL.TheWorld and GLOBAL.TheWorld.components and GLOBAL.TheWorld.components.atlas_todolist then
+                            local result = GLOBAL.TheWorld.components.atlas_todolist:AddTask(text)
+                            if result then
+                                print("[万象全书] 任务添加成功")
+
+                                -- 组件内部已经调用了 SyncToClients()，这里额外触发UI事件
+                                if GLOBAL.ThePlayer then
+                                    GLOBAL.ThePlayer:DoTaskInTime(0.2, function()
+                                        print("[万象全书] 触发UI更新事件")
+                                        GLOBAL.ThePlayer:PushEvent("atlas_todolist_updated")
+                                    end)
+                                end
+                            else
+                                print("[万象全书] 任务添加失败")
+                            end
+                        else
+                            print("[万象全书] 错误: atlas_todolist 组件不存在")
+                        end
+                    else
+                        print("[万象全书] 输入内容为空")
+                    end
+                end,
+                control = CONTROL_ACCEPT
+            },
+        })
+        print("[万象全书] 临时路牌输入界面布局配置成功")
+    else
+        print("[万象全书] 警告: writeables 模块不存在或加载失败，跳过输入界面配置")
+        if not success then
+            print("[万象全书] 错误信息:", writeables) -- writeables 变量在失败时包含错误信息
+        end
+    end
+end)
