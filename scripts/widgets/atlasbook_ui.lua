@@ -5,33 +5,21 @@ local Image = require("widgets/image")
 local TEMPLATES = require "widgets/redux/templates"
 local ScrollableList = require "widgets/scrollablelist"
 
--- 加载外部攻略数据，如果失败则使用内置数据
-local function LoadGuideData()
-    print("[万象全书] 尝试加载外部攻略数据...")
+-- 加载多语言字符串模块
+local success, strings_module = pcall(function() return require("strings") end)
 
-    -- 尝试加载外部数据文件
-    local success, external_data = pcall(function()
-        return require("data.guides.guide_data")
-    end)
+local GUIDE_DATA = nil
 
-    if success and external_data then
-        print("[万象全书] 成功加载外部攻略数据")
-        return external_data
-    else
-        print("[万象全书] 外部数据加载失败，使用内置数据")
-        return nil
-    end
-end
+if success and type(strings_module) == "table" and strings_module.GetGuideData then
+    -- 使用多语言攻略数据
+    GUIDE_DATA = strings_module.GetGuideData()
+    print("[万象全书] 成功加载多语言攻略数据")
+else
+    print("[万象全书] 错误: 无法加载strings模块，success:", success, "type:", type(strings_module))
+    print("[万象全书] 错误详情:", strings_module)
 
--- 定义攻略内容数据，使用层级结构
--- 首先尝试加载外部数据，失败时使用内置数据
-local GUIDE_DATA = LoadGuideData()
-
--- 如果外部数据加载失败，使用内置数据
-if not GUIDE_DATA then
-    print("[万象全书] 使用内置数据")
+    -- 提供备用数据
     GUIDE_DATA = {
-        -- 第一大节：新手指南
         beginner = {
             title = "新手指南",
             is_section = true,
@@ -46,8 +34,6 @@ if not GUIDE_DATA then
                 },
             },
         },
-
-        -- 第二大节：生存技巧
         survival = {
             title = "生存技巧",
             is_section = true,
@@ -62,8 +48,6 @@ if not GUIDE_DATA then
                 },
             },
         },
-
-        -- 第三大节：战斗指南
         combat = {
             title = "战斗指南",
             is_section = true,
@@ -110,21 +94,33 @@ local AtlasBookUI = Class(Screen, function(self, owner)
     self.root:SetPosition(0, 0, 0)
     self.root:SetScaleMode(SCALEMODE_PROPORTIONAL)
     
-    self.panel = self.root:AddChild(TEMPLATES.RectangleWindow(900, 600, "万象全书"))
+    -- 调试：检查STRINGS表状态
+    print("[万象全书] 调试 - STRINGS.WINDOW_TITLE:", STRINGS.WINDOW_TITLE)
+    print("[万象全书] 调试 - STRINGS表内容:", STRINGS and "存在" or "不存在")
+    if STRINGS then
+        print("[万象全书] 调试 - STRINGS表大小:", #STRINGS)
+        for k, v in pairs(STRINGS) do
+            if type(v) ~= "table" then
+                print("[万象全书] 调试 - STRINGS." .. k .. ":", v)
+            end
+        end
+    end
+
+    self.panel = self.root:AddChild(TEMPLATES.RectangleWindow(900, 600, STRINGS.WINDOW_TITLE or "万象全书"))
     self.panel:SetBackgroundTint(unpack(UICOLOURS.BROWN_DARK))
-    
+
     -- 手动添加关闭按钮
-    self.close_button = self.panel:AddChild(TEMPLATES.StandardButton(function() self:Close() end, "关闭", {100, 50}))
+    self.close_button = self.panel:AddChild(TEMPLATES.StandardButton(function() self:Close() end, STRINGS.CLOSE_BUTTON or "关闭", {100, 50}))
     self.close_button:SetPosition(900/2 - 50, 600/2 - 25, 0)
 
     -- 标签页
     self.tabs_root = self.panel:AddChild(Widget("TABS_ROOT"))
     self.tabs_root:SetPosition(0, 260, 0)
 
-    self.guide_tab_button = self.tabs_root:AddChild(TEMPLATES.StandardButton(function() self:SetView("guide") end, "静态攻略", {150, 50}))
+    self.guide_tab_button = self.tabs_root:AddChild(TEMPLATES.StandardButton(function() self:SetView("guide") end, STRINGS.GUIDE_TAB or "静态攻略", {150, 50}))
     self.guide_tab_button:SetPosition(-80, 0, 0)
 
-    self.planner_tab_button = self.tabs_root:AddChild(TEMPLATES.StandardButton(function() self:SetView("planner") end, "团队计划", {150, 50}))
+    self.planner_tab_button = self.tabs_root:AddChild(TEMPLATES.StandardButton(function() self:SetView("planner") end, STRINGS.PLANNER_TAB or "团队计划", {150, 50}))
     self.planner_tab_button:SetPosition(80, 0, 0)
 
     -- 视图容器
@@ -160,10 +156,10 @@ local AtlasBookUI = Class(Screen, function(self, owner)
     self:CreateMenuButtons()
 
     -- 翻页按钮
-    self.prev_button = self.guide_view:AddChild(TEMPLATES.StandardButton(function() self:OnPrevPage() end, "<", {50, 50}))
+    self.prev_button = self.guide_view:AddChild(TEMPLATES.StandardButton(function() self:OnPrevPage() end, STRINGS.PREV_PAGE or "<", {50, 50}))
     self.prev_button:SetPosition(-100, -260, 0)
 
-    self.next_button = self.guide_view:AddChild(TEMPLATES.StandardButton(function() self:OnNextPage() end, ">", {50, 50}))
+    self.next_button = self.guide_view:AddChild(TEMPLATES.StandardButton(function() self:OnNextPage() end, STRINGS.NEXT_PAGE or ">", {50, 50}))
     self.next_button:SetPosition(100, -260, 0)
     
     -- 团队计划视图
@@ -186,7 +182,7 @@ local AtlasBookUI = Class(Screen, function(self, owner)
                 print("[万象全书] 错误: 临时路牌不存在或没有writeable组件")
             end
         end,
-        "添加任务", {120, 50}
+        STRINGS.ADD_TASK_BUTTON or "添加任务", {120, 50}
     ))
     self.add_task_button:SetPosition(0, -250, 0)
 
@@ -373,24 +369,34 @@ end
 function AtlasBookUI:CreateTempSignForInput()
     print("[万象全书] 创建临时路牌用于输入")
 
+    -- 清理任何现有的临时路牌
+    self:CleanupTempSign()
+
     -- 创建一个临时的路牌实体（不可见）
-    self.temp_sign = SpawnPrefab("homesign")
-    if self.temp_sign then
+    local success, temp_sign = pcall(function() return SpawnPrefab("homesign") end)
+
+    if success and temp_sign then
+        self.temp_sign = temp_sign
+
         -- 设置路牌为不可见和不可交互
-        self.temp_sign.entity:SetCanSleep(false)
-        self.temp_sign:Hide()
+        if self.temp_sign.entity then
+            self.temp_sign.entity:SetCanSleep(false)
+            self.temp_sign:Hide()
+        end
 
         -- 设置路牌位置在玩家附近但不可见
         if self.owner then
             local pos = self.owner:GetPosition()
-            self.temp_sign.Transform:SetPosition(pos.x, pos.y, pos.z)
+            if pos then
+                self.temp_sign.Transform:SetPosition(pos.x, pos.y, pos.z)
+            end
         end
 
         -- 覆盖prefab名称以使用我们的自定义布局
         self.temp_sign.prefab = "atlas_temp_sign"
 
         -- 配置writeable组件的回调
-        if self.temp_sign.components.writeable then
+        if self.temp_sign.components and self.temp_sign.components.writeable then
             self.temp_sign.components.writeable:SetOnWrittenFn(function(inst, text, doer)
                 print("[万象全书] 路牌输入完成，获取文本: " .. tostring(text))
                 self:OnSignInputComplete(text)
@@ -406,6 +412,7 @@ function AtlasBookUI:CreateTempSignForInput()
         print("[万象全书] 临时路牌创建成功")
     else
         print("[万象全书] 错误: 无法创建临时路牌")
+        self.temp_sign = nil
     end
 end
 
@@ -449,7 +456,7 @@ function AtlasBookUI:CreateTaskItem(task)
                     print("[万象全书] 错误: TheWorld.components.atlas_todolist 不存在")
                 end
             end,
-            task.completed and "✓" or "□", 
+            task.completed and (STRINGS.COMPLETED_TASK or "✓") or (STRINGS.PENDING_TASK or "□"),
             {40, 40}
         ))
     end)
@@ -503,7 +510,7 @@ function AtlasBookUI:CreateTaskItem(task)
                     print("[万象全书] 错误: TheWorld.components.atlas_todolist 不存在")
                 end
             end,
-            "删除", 
+            STRINGS.DELETE_BUTTON or "删除",
             {80, 40}
         ))
     end)
@@ -669,8 +676,16 @@ function AtlasBookUI:SetChapter(chapter_id)
     
     if chapter_data then
         self.current_chapter_id = chapter_id
+
+        -- 调试：检查章节数据
+        print("[万象全书] 调试 - 设置章节:", chapter_id)
+        print("[万象全书] 调试 - 章节标题:", chapter_data.title)
+        print("[万象全书] 调试 - 章节内容:", chapter_data.text)
+
         self.content_title:SetString(chapter_data.title)
         self.content_text:SetString(chapter_data.text)
+
+        print("[万象全书] 调试 - 文本设置完成")
         
         -- 高亮当前选中的章节按钮
         for id, button in pairs(self.menu_buttons) do
@@ -700,6 +715,8 @@ end
 
 -- 关闭UI
 function AtlasBookUI:Close()
+    print("[万象全书] 开始关闭UI，执行清理工作")
+
     -- 清理临时路牌
     self:CleanupTempSign()
 
@@ -710,19 +727,40 @@ function AtlasBookUI:Close()
     end
 
     -- 移除所有事件监听器，因为UI即将被销毁
-    if self.task_update_listener then
-        TheWorld:RemoveEventCallback("atlas_todolist_updated", self.task_update_listener)
-        self.task_update_listener = nil
-    end
-    if self.sign_input_listener then
-        TheWorld:RemoveEventCallback("atlas_sign_input_complete", self.sign_input_listener)
-        self.sign_input_listener = nil
-    end
-    if self.task_ready_listener then
-        TheWorld:RemoveEventCallback("atlas_todolist_ready", self.task_ready_listener)
-        self.task_ready_listener = nil
+    local listeners_to_remove = {
+        {name = "atlas_todolist_updated", listener = self.task_update_listener},
+        {name = "atlas_sign_input_complete", listener = self.sign_input_listener},
+        {name = "atlas_todolist_ready", listener = self.task_ready_listener}
+    }
+
+    for _, listener_info in ipairs(listeners_to_remove) do
+        if listener_info.listener then
+            local success = pcall(function()
+                TheWorld:RemoveEventCallback(listener_info.name, listener_info.listener)
+                print("[万象全书] 成功移除事件监听器: " .. listener_info.name)
+            end)
+            if not success then
+                print("[万象全书] 移除事件监听器失败: " .. listener_info.name)
+            end
+        end
     end
 
+    -- 清空监听器引用
+    self.task_update_listener = nil
+    self.sign_input_listener = nil
+    self.task_ready_listener = nil
+
+    -- 清理UI相关资源
+    if self.task_items then
+        for _, item in pairs(self.task_items) do
+            if item and item.Kill then
+                item:Kill()
+            end
+        end
+        self.task_items = nil
+    end
+
+    print("[万象全书] UI关闭完成")
     TheFrontEnd:PopScreen(self)
 end
 
@@ -730,18 +768,30 @@ function AtlasBookUI:CleanupTempSign()
     print("[万象全书] 清理临时路牌")
 
     if self.temp_sign then
-        -- 结束任何正在进行的输入
-        if self.temp_sign.components.writeable then
-            self.temp_sign.components.writeable:EndWriting()
-        end
+        -- 使用pcall保护清理过程，避免因为实体已被移除而报错
+        local success = pcall(function()
+            -- 结束任何正在进行的输入
+            if self.temp_sign.components and self.temp_sign.components.writeable then
+                self.temp_sign.components.writeable:EndWriting()
+            end
 
-        -- 移除临时路牌
-        if self.temp_sign:IsValid() then
-            self.temp_sign:Remove()
+            -- 移除临时路牌
+            if self.temp_sign:IsValid() then
+                self.temp_sign:Remove()
+                print("[万象全书] 临时路牌实体已移除")
+            else
+                print("[万象全书] 临时路牌实体已无效")
+            end
+        end)
+
+        if not success then
+            print("[万象全书] 清理临时路牌时发生错误，但继续执行")
         end
 
         self.temp_sign = nil
         print("[万象全书] 临时路牌清理完成")
+    else
+        print("[万象全书] 没有临时路牌需要清理")
     end
 end
 
@@ -802,21 +852,57 @@ function AtlasBookUI:OnBecomeInactive()
     SetPause(false, "atlas_book")
 
     -- 清理临时路牌（如果正在输入）
-    if self.temp_sign and self.temp_sign.components.writeable then
+    if self.temp_sign and self.temp_sign.components and self.temp_sign.components.writeable then
         self.temp_sign.components.writeable:EndWriting()
     end
 
-    -- 不再移除全局事件监听器，因为它们应该在UI的生命周期内保持活跃
-    -- 只有在UI完全关闭时（Close函数）才移除它们
-    -- if self.task_update_listener then
-    --     TheWorld:RemoveEventCallback("atlas_todolist_updated", self.task_update_listener)
-    --     self.task_update_listener = nil
-    -- end
-
+    -- 注意：不在这里移除全局事件监听器，因为UI可能只是暂时失去焦点
+    -- 事件监听器会在UI完全关闭时（Close函数）被移除
     if self.task_ready_listener then
-        TheWorld:RemoveEventCallback("atlas_todolist_ready", self.task_ready_listener)
-        self.task_ready_listener = nil
+        local success = pcall(function()
+            TheWorld:RemoveEventCallback("atlas_todolist_ready", self.task_ready_listener)
+            self.task_ready_listener = nil
+        end)
+        if not success then
+            print("[万象全书] 移除task_ready_listener失败")
+        end
     end
+
+    print("[万象全书] UI失去焦点")
+end
+
+-- 添加析构函数，确保资源清理
+function AtlasBookUI:_ctor(...)
+    -- 调用父类构造函数
+    AtlasBookUI._base._ctor(self, ...)
+
+    -- 添加到全局清理列表，确保在游戏退出时被清理
+    if not _G.atlas_ui_instances then
+        _G.atlas_ui_instances = {}
+    end
+    table.insert(_G.atlas_ui_instances, self)
+end
+
+-- 全局清理函数，用于在游戏退出时清理所有UI实例
+local function CleanupAllAtlasUI()
+    if _G.atlas_ui_instances then
+        for i, ui_instance in ipairs(_G.atlas_ui_instances) do
+            if ui_instance and ui_instance.CleanupTempSign then
+                pcall(function() ui_instance:CleanupTempSign() end)
+            end
+        end
+        _G.atlas_ui_instances = nil
+    end
+end
+
+-- 在游戏退出时清理资源
+if GLOBAL and GLOBAL.TheWorld then
+    AddSimPostInit(function()
+        if GLOBAL.TheWorld and GLOBAL.TheWorld.event_listeners then
+            -- 添加到世界事件监听，确保在世界清理时执行清理
+            GLOBAL.TheWorld:ListenForEvent("worldremoving", CleanupAllAtlasUI)
+        end
+    end)
 end
 
 return AtlasBookUI

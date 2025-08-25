@@ -49,7 +49,7 @@ local function fn()
     -----------------------------------
 
     inst:AddComponent("inspectable")
-    inst.components.inspectable:SetDescription("一本包含丰富知识的指南书。")
+    inst.components.inspectable:SetDescription(STRINGS.RECIPE_DESC.ATLAS_BOOK)
     
     inst:AddComponent("book")
     inst.components.book.onread = def.fn

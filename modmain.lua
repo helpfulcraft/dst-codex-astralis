@@ -5,6 +5,9 @@ local IsServer = GLOBAL.TheNet:GetIsServer()
 local require = GLOBAL.require
 local STRINGS = GLOBAL.STRINGS
 local PI = GLOBAL.PI
+
+-- 加载多语言字符串模块
+local strings_module = require("strings")
 local TheSim = GLOBAL.TheSim
 local Ingredient = GLOBAL.Ingredient
 local TUNING = GLOBAL.TUNING
@@ -22,6 +25,65 @@ local ATLAS_RPC_TOGGLE_TASK = "toggle_task"
 local ATLAS_RPC_DELETE_TASK = "delete_task"
 local ATLAS_RPC_SYNC_TASKS = "sync_tasks"
 
+-- 动作系统覆盖，让所有角色都能阅读atlas_book
+-- 获取COMPONENT_ACTIONS系统引用
+local function GetComponentActions()
+    local fn = GLOBAL.EntityScript.CollectActions
+    local upvalue_name = "COMPONENT_ACTIONS"
+    local set_upvalue = nil
+    if fn == nil or upvalue_name == nil then
+        return
+    end
+    local i = 1
+    while true do
+        local val, v = GLOBAL.debug.getupvalue(fn, i)
+
+        if not val then
+            break
+        end
+        if val == upvalue_name then
+            if set_upvalue then
+                GLOBAL.debug.setupvalue(fn, i, set_upvalue)
+            end
+
+            return v, i
+        end
+        i = i + 1
+    end
+end
+
+-- 重写book组件动作收集函数
+local COMPONENT_ACTIONS = GetComponentActions()
+if COMPONENT_ACTIONS then
+    local superBook = COMPONENT_ACTIONS.INVENTORY.book
+
+    COMPONENT_ACTIONS.INVENTORY.book = function(inst, doer, actions)
+        if inst and inst:HasTag('atlas_book') then
+            table.insert(actions, GLOBAL.ACTIONS.READ)
+        else
+            if superBook then
+                superBook(inst, doer, actions)
+            end
+        end
+    end
+end
+
+-- 重写READ动作执行函数
+local superRead = GLOBAL.ACTIONS.READ.fn
+
+GLOBAL.ACTIONS.READ.fn = function(act)
+    local book = act.target or act.invobject
+    if book and book:HasTag('atlas_book') then
+        if book.components.book ~= nil then
+            local success, reason = book.components.book.onread(book, act.doer)
+            return success, reason
+        end
+    else
+        return superRead(act)
+    end
+end
+
+print("[万象全书] 动作系统覆盖完成 - 所有角色现在都可以阅读万象全书")
 -- 注册UI
 local AtlasBookUI = require("widgets/atlasbook_ui")
 if not AtlasBookUI then
@@ -220,52 +282,9 @@ Assets =
         Asset("IMAGE", "images/inventoryimages/catcoonden.tex"),
         
     }
-STRINGS.BOOK_PETRIFY = "book_petrify"
-STRINGS.NAMES.BOOK_PETRIFY = "petrifying book"
-STRINGS.RECIPE_DESC.BOOK_PETRIFY = "Exposure evergreens with Medusa's eyes."
 
--- 添加万象全书的字符串
-STRINGS.NAMES.ATLAS_BOOK = "万象全书"
-STRINGS.RECIPE_DESC.ATLAS_BOOK = "包含丰富知识的指南书"
-
--- 各角色对万象全书的描述
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.ATLAS_BOOK = "包含了这个世界的所有知识。"
-STRINGS.CHARACTERS.WILLOW.DESCRIBE.ATLAS_BOOK = "这本书看起来不太容易燃烧。"
-STRINGS.CHARACTERS.WOLFGANG.DESCRIBE.ATLAS_BOOK = "大书让沃尔夫冈变聪明！"
-STRINGS.CHARACTERS.WENDY.DESCRIBE.ATLAS_BOOK = "知识是对抗虚无的唯一武器。"
-STRINGS.CHARACTERS.WX78.DESCRIBE.ATLAS_BOOK = "人类知识储存装置。有用。"
-STRINGS.CHARACTERS.WICKERBOTTOM.DESCRIBE.ATLAS_BOOK = "一本包含丰富知识的指南书。"
-STRINGS.CHARACTERS.WOODIE.DESCRIBE.ATLAS_BOOK = "这本书上没有关于伐木的内容，真遗憾。"
-STRINGS.CHARACTERS.WAXWELL.DESCRIBE.ATLAS_BOOK = "知识就是力量，不是吗？"
-STRINGS.CHARACTERS.WATHGRITHR.DESCRIBE.ATLAS_BOOK = "维京战士不需要书籍！...但这本可以例外。"
-STRINGS.CHARACTERS.WEBBER.DESCRIBE.ATLAS_BOOK = "我们可以从这本书里学到很多东西！"
-STRINGS.CHARACTERS.WINONA.DESCRIBE.ATLAS_BOOK = "实用的指南，我喜欢。"
-STRINGS.CHARACTERS.WORTOX.DESCRIBE.ATLAS_BOOK = "知识的味道如何呢？嘻嘻！"
-STRINGS.CHARACTERS.WARLY.DESCRIBE.ATLAS_BOOK = "可惜没有更多的烹饪秘方。"
-STRINGS.CHARACTERS.WURT.DESCRIBE.ATLAS_BOOK = "鱼人也要学习！"
-STRINGS.CHARACTERS.WORMWOOD.DESCRIBE.ATLAS_BOOK = "朋友的叶子？不，是知识。"
-
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.BOOK_PETRIFY            = STRINGS.CHARACTERS.GENERIC.DESCRIBE.BOOK_FOSSIL
-STRINGS.CHARACTERS.WILLOW.DESCRIBE.BOOK_PETRIFY             = STRINGS.CHARACTERS.WILLOW.DESCRIBE.BOOK_FOSSIL
-STRINGS.CHARACTERS.WOLFGANG.DESCRIBE.BOOK_PETRIFY           = STRINGS.CHARACTERS.WOLFGANG.DESCRIBE.BOOK_FOSSIL
-STRINGS.CHARACTERS.WENDY.DESCRIBE.BOOK_PETRIFY              = STRINGS.CHARACTERS.WENDY.DESCRIBE.BOOK_FOSSIL
-STRINGS.CHARACTERS.WX78.DESCRIBE.BOOK_PETRIFY               = STRINGS.CHARACTERS.WX78.DESCRIBE.BOOK_FOSSIL
-STRINGS.CHARACTERS.WICKERBOTTOM.DESCRIBE.BOOK_PETRIFY       = STRINGS.CHARACTERS.WICKERBOTTOM.DESCRIBE.BOOK_FOSSIL
-STRINGS.CHARACTERS.WOODIE.DESCRIBE.BOOK_PETRIFY             = STRINGS.CHARACTERS.WOODIE.DESCRIBE.BOOK_FOSSIL
-STRINGS.CHARACTERS.WAXWELL.DESCRIBE.BOOK_PETRIFY            = STRINGS.CHARACTERS.WAXWELL.DESCRIBE.BOOK_FOSSIL
-STRINGS.CHARACTERS.WATHGRITHR.DESCRIBE.BOOK_PETRIFY         = STRINGS.CHARACTERS.WATHGRITHR.DESCRIBE.BOOK_FOSSIL
-STRINGS.CHARACTERS.WEBBER.DESCRIBE.BOOK_PETRIFY             = STRINGS.CHARACTERS.WEBBER.DESCRIBE.BOOK_FOSSIL
-STRINGS.CHARACTERS.WINONA.DESCRIBE.BOOK_PETRIFY             = STRINGS.CHARACTERS.WINONA.DESCRIBE.BOOK_FOSSIL
-STRINGS.CHARACTERS.WORTOX.DESCRIBE.BOOK_PETRIFY             = STRINGS.CHARACTERS.WORTOX.DESCRIBE.BOOK_FOSSIL
-STRINGS.CHARACTERS.WARLY.DESCRIBE.BOOK_PETRIFY              = STRINGS.CHARACTERS.WARLY.DESCRIBE.BOOK_FOSSIL
-STRINGS.CHARACTERS.WURT.DESCRIBE.BOOK_PETRIFY               = STRINGS.CHARACTERS.WURT.DESCRIBE.BOOK_FOSSIL
-STRINGS.CHARACTERS.WORMWOOD.DESCRIBE.BOOK_PETRIFY           = STRINGS.CHARACTERS.WORMWOOD.DESCRIBE.BOOK_FOSSIL
-
-STRINGS.RECIPE_DESC.SPIDERHOLE = "重建蜘蛛洞穴"
-STRINGS.RECIPE_DESC.WASPHIVE = "我们就是喜欢养蛊"
-STRINGS.RECIPE_DESC.BEEHIVE = "爱护蜜蜂 人人有责"
-STRINGS.RECIPE_DESC.SLURTLEHOLE = "内有两只蜗牛"
-STRINGS.RECIPE_DESC.CATCOONDEN = "浣猫喜欢居住其中"
+-- 多语言字符串现在通过 scripts/strings.lua 模块加载
+-- 所有字符串定义已移除，改用动态加载方式
 
 -- 延迟到游戏完全初始化后添加配方，确保 CUSTOM_RECIPETABS 可用
 AddSimPostInit(function()
@@ -372,7 +391,7 @@ rcd.atlas = "images/inventoryimages/catcoonden.xml"
     TUNING.SALTLICK_LIGHTNINGGOAT_USES = 0
     TUNING.SALTLICK_DEER_USES = 0
 
-    STRINGS.RECIPE_DESC.MEATRACK_HERMIT = "剽窃老螃蟹的工艺"
+    -- 多语言字符串已通过 scripts/strings.lua 模块加载
     AddPrefabPostInit("petals", frozen)
     AddPrefabPostInit("mermhat", merm_init)
     AddPrefabPostInit("sisturn", petfreeze)
@@ -454,18 +473,18 @@ AddSimPostInit(function()
 
     if success and writeables and writeables.AddLayout then
         writeables.AddLayout("atlas_temp_sign", {
-            prompt = "输入任务内容:",
+            prompt = STRINGS.INPUT_PROMPT,
             animbank = "ui_board_5x3",
             animbuild = "ui_board_5x3",
             menuoffset = GLOBAL.Vector3(6, -70, 0),
             maxcharacters = 100, -- 限制任务最大长度
 
-            cancelbtn = { text = "取消", cb = nil, control = CONTROL_CANCEL },
-            middlebtn = { text = "清空", cb = function(inst, doer, widget)
+            cancelbtn = { text = STRINGS.CANCEL_BUTTON, cb = nil, control = CONTROL_CANCEL },
+            middlebtn = { text = STRINGS.CLEAR_BUTTON, cb = function(inst, doer, widget)
                 widget:OverrideText("")
             end, control = CONTROL_MENU_MISC_2 },
             acceptbtn = {
-                text = "确定",
+                text = STRINGS.CONFIRM_BUTTON,
                 cb = function(inst, doer, widget)
                     local text = widget:GetText()
                     if text and text ~= "" then
@@ -506,3 +525,20 @@ AddSimPostInit(function()
         end
     end
 end)
+
+-- 添加模组清理函数
+if GLOBAL and GLOBAL.TheWorld then
+    -- 在世界清理时执行资源清理
+    GLOBAL.TheWorld:ListenForEvent("worldremoving", function()
+        print("[万象全书] 检测到世界清理，开始执行资源清理")
+        -- 清理全局UI实例
+        if _G.atlas_ui_instances then
+            for i, ui_instance in ipairs(_G.atlas_ui_instances) do
+                if ui_instance and ui_instance.CleanupTempSign then
+                    pcall(function() ui_instance:CleanupTempSign() end)
+                end
+            end
+            _G.atlas_ui_instances = nil
+        end
+    end)
+end
