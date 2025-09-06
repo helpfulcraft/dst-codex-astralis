@@ -5,18 +5,47 @@ local Image = require("widgets/image")
 local TEMPLATES = require "widgets/redux/templates"
 local ScrollableList = require "widgets/scrollablelist"
 
+-- UI文件中直接使用全局变量，不需要声明
+
 -- 加载多语言字符串模块
-local success, strings_module = pcall(function() return require("strings") end)
+local strings_module = require("strings")
+if not strings_module then
+    -- 如果require失败，提供备用数据
+    print("[万象全书] 警告: 无法加载strings模块，使用备用数据")
+    strings_module = {
+        CurrentLanguage = "zh",
+        GetGuideData = function()
+            return {
+                beginner = {
+                    title = "新手指南",
+                    is_section = true,
+                    children = {
+                        beginner_day1to3 = {
+                            title = "开局前三天",
+                            text = "第一天：收集树枝、草、燧石，制作基本工具。\n第二天：建立营地，制作科学机器。\n第三天：准备食物和火把，迎接第一个夜晚。",
+                        },
+                        beginner_base = {
+                            title = "基地建设",
+                            text = "选择基地位置时要考虑资源、生物群落和季节因素。\n基础设施：营火、科学机器、烹饪锅、冰箱、晾肉架。\n围墙与陷阱可以提供安全保障。",
+                        },
+                    },
+                },
+            }
+        end
+    }
+end
 
 local GUIDE_DATA = nil
 
-if success and type(strings_module) == "table" and strings_module.GetGuideData then
+if strings_module and type(strings_module) == "table" and strings_module.GetGuideData then
     -- 使用多语言攻略数据
     GUIDE_DATA = strings_module.GetGuideData()
     print("[万象全书] 成功加载多语言攻略数据")
 else
-    print("[万象全书] 错误: 无法加载strings模块，success:", success, "type:", type(strings_module))
-    print("[万象全书] 错误详情:", strings_module)
+    print("[万象全书] 错误: 无法加载strings模块，type:", type(strings_module))
+    if strings_module then
+        print("[万象全书] strings_module 内容:", strings_module)
+    end
 
     -- 提供备用数据
     GUIDE_DATA = {
@@ -82,8 +111,15 @@ end
 FlattenChapters()
 
 local AtlasBookUI = Class(Screen, function(self, owner)
-    Screen._ctor(self, "AtlasBookUI")
-    self.owner = owner
+    print("[万象全书] 开始构造函数")
+
+    -- 设置owner，如果没有传递则使用当前玩家
+    self.owner = owner or ThePlayer
+
+    -- 简单的方式调用父类，避免参数问题
+    Screen._ctor(self)
+
+    print("[万象全书] Screen构造函数调用完成")
     self.expanded_sections = {} -- 记录哪些大节是展开的
     self.current_view = "guide" -- 当前显示的视图
     self.tasks = {} -- 团队计划的任务列表
@@ -245,6 +281,10 @@ local AtlasBookUI = Class(Screen, function(self, owner)
 
     -- 设置初始视图
     self:SetView("guide")
+    
+    -- 确保客户端组件存在，如果不存在则尝试添加
+    self:EnsureClientComponent()
+    
     self:UpdateTaskList()
 
     -- 全局事件监听器 - 在UI初始化时就设置，确保随时能接收更新
@@ -260,7 +300,8 @@ local AtlasBookUI = Class(Screen, function(self, owner)
     if not self.sign_input_listener then
         self.sign_input_listener = TheWorld:ListenForEvent("atlas_sign_input_complete", function()
             print("[万象全书] 收到路牌输入完成事件，立即处理")
-            self.inst:DoTaskInTime(0.05, function()
+            -- 使用TheWorld来延迟执行，因为UI类没有inst属性
+            TheWorld:DoTaskInTime(0.05, function()
                 print("[万象全书] 处理路牌输入后的UI刷新")
                 self:ForceUpdateTaskList()
             end)
@@ -268,6 +309,38 @@ local AtlasBookUI = Class(Screen, function(self, owner)
         print("[万象全书] 已设置路牌输入监听器")
     end
 end)
+
+function AtlasBookUI:EnsureClientComponent()
+    print("[万象全书] 检查客户端组件状态")
+    
+    -- 尝试检查组件是否存在，如果不存在则尝试添加
+    local success = pcall(function()
+        if not TheWorld or not TheWorld.components or not TheWorld.components.atlas_todolist then
+            print("[万象全书] 检测到缺少atlas_todolist组件，正在添加")
+            TheWorld:AddComponent("atlas_todolist")
+            print("[万象全书] 组件添加成功")
+        else
+            print("[万象全书] 组件已存在")
+        end
+    end)
+    
+    if not success then
+        print("[万象全书] 组件检查或添加失败")
+    end
+    
+    -- 请求同步任务列表
+    self:RequestTaskSync()
+end
+
+function AtlasBookUI:RequestTaskSync()
+    print("[万象全书] 请求同步任务列表")
+    local success = pcall(function()
+        SendModRPCToServer("atlas_book", "sync_tasks")
+    end)
+    if not success then
+        print("[万象全书] RPC调用失败")
+    end
+end
 
 function AtlasBookUI:SetView(view_name)
     self.current_view = view_name
@@ -834,10 +907,8 @@ function AtlasBookUI:OnBecomeActive()
         end)
     end
 
-    -- 检查组件是否存在
-    if not TheWorld or not TheWorld.components or not TheWorld.components.atlas_todolist then
-        print("[万象全书] 警告: TheWorld.components.atlas_todolist 不存在")
-    end
+    -- 检查组件是否存在，如果不存在则尝试添加
+    self:EnsureClientComponent()
 
     -- 确保每次激活时，如果当前是 planner 视图，任务列表也进行一次刷新
     if self.current_view == "planner" then
@@ -871,38 +942,8 @@ function AtlasBookUI:OnBecomeInactive()
     print("[万象全书] UI失去焦点")
 end
 
--- 添加析构函数，确保资源清理
-function AtlasBookUI:_ctor(...)
-    -- 调用父类构造函数
-    AtlasBookUI._base._ctor(self, ...)
+-- 清理逻辑已在modmain.lua中移除，这里不必重复添加_ctor方法
 
-    -- 添加到全局清理列表，确保在游戏退出时被清理
-    if not _G.atlas_ui_instances then
-        _G.atlas_ui_instances = {}
-    end
-    table.insert(_G.atlas_ui_instances, self)
-end
-
--- 全局清理函数，用于在游戏退出时清理所有UI实例
-local function CleanupAllAtlasUI()
-    if _G.atlas_ui_instances then
-        for i, ui_instance in ipairs(_G.atlas_ui_instances) do
-            if ui_instance and ui_instance.CleanupTempSign then
-                pcall(function() ui_instance:CleanupTempSign() end)
-            end
-        end
-        _G.atlas_ui_instances = nil
-    end
-end
-
--- 在游戏退出时清理资源
-if GLOBAL and GLOBAL.TheWorld then
-    AddSimPostInit(function()
-        if GLOBAL.TheWorld and GLOBAL.TheWorld.event_listeners then
-            -- 添加到世界事件监听，确保在世界清理时执行清理
-            GLOBAL.TheWorld:ListenForEvent("worldremoving", CleanupAllAtlasUI)
-        end
-    end)
-end
+-- 清理逻辑已移至modmain.lua中处理，这里不需要再添加
 
 return AtlasBookUI

@@ -1,0 +1,110 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: CanKaoMod\n"
+"POT-Creation-Date: 2025-09-03 10:30+0800\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh\n"
+
+#. STRINGS.NAMES.ATLAS_BOOK
+msgctxt "STRINGS.NAMES.ATLAS_BOOK"
+msgid "Codex Astralis"
+msgstr "万象全书"
+
+#. STRINGS.NAMES.BOOK_PETRIFY
+msgctxt "STRINGS.NAMES.BOOK_PETRIFY"
+msgid "Petrifying Tome"
+msgstr "石化之书"
+
+#. STRINGS.DESCRIBE.ATLAS_BOOK
+msgctxt "STRINGS.DESCRIBE.ATLAS_BOOK"
+msgid "A mystical tome containing ancient knowledge and survival guides."
+msgstr "一本包含古代知识和生存指南的神秘典籍。"
+
+#. STRINGS.DESCRIBE.BOOK_PETRIFY
+msgctxt "STRINGS.DESCRIBE.BOOK_PETRIFY"
+msgid "A powerful tome that can turn creatures to stone."
+msgstr "一本能够将生物石化的强大典籍。"
+
+#. STRINGS.CHARACTERS.GENERIC.DESCRIBE.ATLAS_BOOK
+msgctxt "STRINGS.CHARACTERS.GENERIC.DESCRIBE.ATLAS_BOOK"
+msgid "A book of knowledge and wisdom."
+msgstr "一本知识和智慧的书籍。"
+
+#. STRINGS.CHARACTERS.GENERIC.DESCRIBE.BOOK_PETRIFY
+msgctxt "STRINGS.CHARACTERS.GENERIC.DESCRIBE.BOOK_PETRIFY"
+msgid "This tome radiates dark magic."
+msgstr "这本典籍散发着黑暗魔法。"
+
+#. STRINGS.WINDOW_TITLE
+msgctxt "STRINGS.WINDOW_TITLE"
+msgid "Codex Astralis"
+msgstr "万象全书"
+
+#. STRINGS.CLOSE_BUTTON
+msgctxt "STRINGS.CLOSE_BUTTON"
+msgid "Close"
+msgstr "关闭"
+
+#. STRINGS.GUIDE_TAB
+msgctxt "STRINGS.GUIDE_TAB"
+msgid "Guide"
+msgstr "攻略"
+
+#. STRINGS.PLANNER_TAB
+msgctxt "STRINGS.PLANNER_TAB"
+msgid "Planner"
+msgstr "规划"
+
+#. STRINGS.PREV_PAGE
+msgctxt "STRINGS.PREV_PAGE"
+msgid "<"
+msgstr "<"
+
+#. STRINGS.NEXT_PAGE
+msgctxt "STRINGS.NEXT_PAGE"
+msgid ">"
+msgstr ">"
+
+#. STRINGS.ADD_TASK_BUTTON
+msgctxt "STRINGS.ADD_TASK_BUTTON"
+msgid "Add Task"
+msgstr "添加任务"
+
+#. STRINGS.COMPLETED_TASK
+msgctxt "STRINGS.COMPLETED_TASK"
+msgid "✓"
+msgstr "✓"
+
+#. STRINGS.PENDING_TASK
+msgctxt "STRINGS.PENDING_TASK"
+msgid "□"
+msgstr "□"
+
+#. STRINGS.DELETE_BUTTON
+msgctxt "STRINGS.DELETE_BUTTON"
+msgid "Delete"
+msgstr "删除"
+
+#. STRINGS.INPUT_PROMPT
+msgctxt "STRINGS.INPUT_PROMPT"
+msgid "Enter task:"
+msgstr "输入任务："
+
+#. STRINGS.CANCEL_BUTTON
+msgctxt "STRINGS.CANCEL_BUTTON"
+msgid "Cancel"
+msgstr "取消"
+
+#. STRINGS.CLEAR_BUTTON
+msgctxt "STRINGS.CLEAR_BUTTON"
+msgid "Clear"
+msgstr "清空"
+
+#. STRINGS.CONFIRM_BUTTON
+msgctxt "STRINGS.CONFIRM_BUTTON"
+msgid "Confirm"
+msgstr "确认"
+

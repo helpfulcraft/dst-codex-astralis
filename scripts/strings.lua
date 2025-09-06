@@ -1,9 +1,65 @@
 -- scripts/strings.lua 多语言字符串管理
-local STRINGS = GLOBAL.STRINGS
+-- 确保全局STRINGS表存在
+local STRINGS = GLOBAL and GLOBAL.STRINGS or _G and _G.STRINGS or {}
 
 -- 获取当前游戏语言
-local language = GLOBAL.LanguageTranslator.defaultlang or "zh"
-print("[万象全书] 检测到游戏语言:", language)
+local language = "zh"  -- 默认中文
+
+print("[万象全书] 开始语言检测...")
+
+-- 方法1: 通过Profile获得语言设置
+if GLOBAL and GLOBAL.Profile and GLOBAL.Profile:GetValue("language") then
+    language = GLOBAL.Profile:GetValue("language")
+    print("[万象全书] 通过Profile检测语言:", language)
+end
+
+-- 方法2: 通过LanguageTranslator获得语言设置
+if not language or language == "zh" then
+    if GLOBAL and GLOBAL.LanguageTranslator then
+        language = GLOBAL.LanguageTranslator.defaultlang or "zh"
+        print("[万象全书] 通过GLOBAL.LanguageTranslator检测语言:", language)
+    elseif _G and _G.LanguageTranslator then
+        language = _G.LanguageTranslator.defaultlang or "zh"
+        print("[万象全书] 通过_G.LanguageTranslator检测语言:", language)
+    end
+end
+
+-- 方法2.5: 强制检测英文语言
+if language == "zh" then
+    -- 检查游戏是否设置为英文
+    if GLOBAL and GLOBAL.TheNet and GLOBAL.TheNet:GetClientTable() then
+        local client_table = GLOBAL.TheNet:GetClientTable()
+        if client_table and client_table.language then
+            language = client_table.language
+            print("[万象全书] 通过client table检测语言:", language)
+        end
+    end
+end
+
+-- 方法3: 检查LC_DEFAULTLANG这个变量（有时会被设置）
+if not language or language == "zh" then
+    if GLOBAL and GLOBAL.LC_DEFAULTLANG then
+        language = GLOBAL.LC_DEFAULTLANG
+        print("[万象全书] 通过LC_DEFAULTLANG检测语言:", language)
+    elseif _G and _G.LC_DEFAULTLANG then
+        language = _G.LC_DEFAULTLANG
+        print("[万象全书] 通过_G.LC_DEFAULTLANG检测语言:", language)
+    end
+end
+
+print("[万象全书] 最终检测到游戏语言:", language, "(" ..
+    (language == "zh" and "中文" or
+     language == "zht" and "繁体中文" or
+     language == "en" and "英文" or
+     "其他语言") .. ")")
+
+-- 🔧 紧急开关：如需强制使用英文，请设置为true
+local FORCE_ENGLISH = true -- 改为true来强制使用英文
+
+if FORCE_ENGLISH then
+    language = "en"
+    print("[万象全书] 🔧 启用英文模式（紧急开关）")
+end
 
 -- 中文字符串表
 local CHINESE_STRINGS = {
@@ -11,6 +67,8 @@ local CHINESE_STRINGS = {
     NAMES = {
         ATLAS_BOOK = "万象全书",
         BOOK_PETRIFY = "石化之书",
+        MINISIGN = "小木牌",
+        MINISIGN_DRAWN = "{item}木牌",
     },
 
     -- 配方描述
@@ -171,6 +229,8 @@ local ENGLISH_STRINGS = {
     NAMES = {
         ATLAS_BOOK = "Codex Astralis",
         BOOK_PETRIFY = "Petrifying Tome",
+        MINISIGN = "Mini Sign",
+        MINISIGN_DRAWN = "{item} Sign",
     },
 
     -- Recipe descriptions

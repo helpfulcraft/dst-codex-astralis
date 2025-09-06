@@ -1,0 +1,109 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: CanKaoMod\n"
+"POT-Creation-Date: 2025-09-03 10:30+0800\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+
+#. STRINGS.NAMES.ATLAS_BOOK
+msgctxt "STRINGS.NAMES.ATLAS_BOOK"
+msgid "Codex Astralis"
+msgstr ""
+
+#. STRINGS.NAMES.BOOK_PETRIFY
+msgctxt "STRINGS.NAMES.BOOK_PETRIFY"
+msgid "Petrifying Tome"
+msgstr ""
+
+#. STRINGS.DESCRIBE.ATLAS_BOOK
+msgctxt "STRINGS.DESCRIBE.ATLAS_BOOK"
+msgid "A mystical tome containing ancient knowledge and survival guides."
+msgstr ""
+
+#. STRINGS.DESCRIBE.BOOK_PETRIFY
+msgctxt "STRINGS.DESCRIBE.BOOK_PETRIFY"
+msgid "A powerful tome that can turn creatures to stone."
+msgstr ""
+
+#. STRINGS.CHARACTERS.GENERIC.DESCRIBE.ATLAS_BOOK
+msgctxt "STRINGS.CHARACTERS.GENERIC.DESCRIBE.ATLAS_BOOK"
+msgid "A book of knowledge and wisdom."
+msgstr ""
+
+#. STRINGS.CHARACTERS.GENERIC.DESCRIBE.BOOK_PETRIFY
+msgctxt "STRINGS.CHARACTERS.GENERIC.DESCRIBE.BOOK_PETRIFY"
+msgid "This tome radiates dark magic."
+msgstr ""
+
+#. STRINGS.WINDOW_TITLE
+msgctxt "STRINGS.WINDOW_TITLE"
+msgid "Codex Astralis"
+msgstr ""
+
+#. STRINGS.CLOSE_BUTTON
+msgctxt "STRINGS.CLOSE_BUTTON"
+msgid "Close"
+msgstr ""
+
+#. STRINGS.GUIDE_TAB
+msgctxt "STRINGS.GUIDE_TAB"
+msgid "Guide"
+msgstr ""
+
+#. STRINGS.PLANNER_TAB
+msgctxt "STRINGS.PLANNER_TAB"
+msgid "Planner"
+msgstr ""
+
+#. STRINGS.PREV_PAGE
+msgctxt "STRINGS.PREV_PAGE"
+msgid "<"
+msgstr ""
+
+#. STRINGS.NEXT_PAGE
+msgctxt "STRINGS.NEXT_PAGE"
+msgid ">"
+msgstr ""
+
+#. STRINGS.ADD_TASK_BUTTON
+msgctxt "STRINGS.ADD_TASK_BUTTON"
+msgid "Add Task"
+msgstr ""
+
+#. STRINGS.COMPLETED_TASK
+msgctxt "STRINGS.COMPLETED_TASK"
+msgid "✓"
+msgstr ""
+
+#. STRINGS.PENDING_TASK
+msgctxt "STRINGS.PENDING_TASK"
+msgid "□"
+msgstr ""
+
+#. STRINGS.DELETE_BUTTON
+msgctxt "STRINGS.DELETE_BUTTON"
+msgid "Delete"
+msgstr ""
+
+#. STRINGS.INPUT_PROMPT
+msgctxt "STRINGS.INPUT_PROMPT"
+msgid "Enter task:"
+msgstr ""
+
+#. STRINGS.CANCEL_BUTTON
+msgctxt "STRINGS.CANCEL_BUTTON"
+msgid "Cancel"
+msgstr ""
+
+#. STRINGS.CLEAR_BUTTON
+msgctxt "STRINGS.CLEAR_BUTTON"
+msgid "Clear"
+msgstr ""
+
+#. STRINGS.CONFIRM_BUTTON
+msgctxt "STRINGS.CONFIRM_BUTTON"
+msgid "Confirm"
+msgstr ""

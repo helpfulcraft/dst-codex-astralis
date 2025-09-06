@@ -6,8 +6,8 @@ end
 
 -- 多语言名称和描述
 local mod_names = {
-    zh = "万象全书 (Codex Astralis)",
-    en = "Codex Astralis (万象全书)"
+    zh = "万象书 (Codex Astralis)",
+    en = "Codex Astralis (万象书)"
 }
 
 local mod_descriptions = {
@@ -29,7 +29,7 @@ local config_hovers = {
 name = mod_names[language] or mod_names.zh
 description = mod_descriptions[language] or mod_descriptions.zh
 author = "Codex Team"
-version = "3.1"
+version = "4.1"
 forumthread = ""
 
 api_version_dst = 10
